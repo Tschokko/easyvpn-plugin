@@ -1,5 +1,5 @@
 /* 
- * Copyright (c) 2018 TSCHOKKO. All rights reserved.
+ * Copyright (c) 2018 Tschokko. All rights reserved.
  */
 
 #ifndef EASYVPN_PLUGIN_OVPN_CLIENT_CONFIG_H_

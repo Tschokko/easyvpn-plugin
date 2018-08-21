@@ -1,5 +1,5 @@
 /* 
- * Copyright (c) 2018 TSCHOKKO. All rights reserved.
+ * Copyright (c) 2018 Tschokko. All rights reserved.
  */
 
 #include <assert.h>
