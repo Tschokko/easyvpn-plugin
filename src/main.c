@@ -19,7 +19,7 @@
 int
 main(int argc, char **argv)
 {
-    vector_t *vec1 = NULL;
+    /* vector_t *vec1 = NULL;
     struct in6_addr addr = {}, *elem = NULL;
     char str[INET6_ADDRSTRLEN] = {0};
 
@@ -37,11 +37,11 @@ main(int argc, char **argv)
         printf("elem: %s\n", str);
     }
 
-    vector_free(vec1);
+    vector_free(vec1); */
 
     /* ====================================================================== */
 
-    /* ovpn_client_config_t *client1;
+    ovpn_client_config_t *client1;
     ovpn_client_config_alloc(&client1, "192.168.10.1", "255.255.255.0");
 
     ovpn_client_config_add_network(client1, "192.168.20.0/24");
@@ -65,7 +65,7 @@ main(int argc, char **argv)
     ovpn_client_config_add_route(client1, "2001:db8:85a4::/56", "2001:db8:0:0:1::2", 10);
     ovpn_client_config_add_route(client1, "::/0", "2001:db8:0:0:1::2", 10);
 
-    ovpn_client_config_build(client1, stdout); */
+    ovpn_client_config_build(client1, stdout);
 
     /* ====================================================================== */
 
@@ -96,15 +96,11 @@ main(int argc, char **argv)
     ovpn_client_config_build(ovpn_client1, stdout); 
     ovpn_client_config_free(ovpn_client1); */
 
-    msgpack_sbuffer* buffer = msgpack_sbuffer_new();
+    /* ====================================================================== */
+
+    /* msgpack_sbuffer* buffer = msgpack_sbuffer_new();
     msgpack_packer* pk = msgpack_packer_new(buffer, msgpack_sbuffer_write);
 
-    /* msgpack_pack_array(pk, 2);
-    msgpack_pack_bin(pk, 5);
-    msgpack_pack_bin_body(pk, "Hello", 5);
-    msgpack_pack_bin(pk, 11);
-    msgpack_pack_bin_body(pk, "MessagePack", 11); */
-    
     msgpack_pack_array(pk, 7);
 
     // cn
@@ -146,7 +142,7 @@ main(int argc, char **argv)
     printf("\n");
 
     msgpack_sbuffer_free(buffer);
-    msgpack_packer_free(pk);
+    msgpack_packer_free(pk); */
 
     return (0);
 }

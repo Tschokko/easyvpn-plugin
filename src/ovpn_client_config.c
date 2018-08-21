@@ -12,6 +12,42 @@
 
 #include "ovpn_client_config.h"
 
+struct ovpn_client_network {
+    address_family_t vpncn_family;
+    union {
+        struct in_addr vpncn_ipv4_addr;
+        struct in6_addr vpncn_ipv6_addr;
+    };
+    size_t vpncn_prefix;
+};
+
+struct ovpn_client_route {
+    address_family_t vpncr_family;
+    union {
+        struct {
+            struct in_addr vpncr_ipv4_addr;
+            struct in_addr vpncr_ipv4_gateway_addr;
+        };
+        struct {
+            struct in6_addr vpncr_ipv6_addr;
+            struct in6_addr vpncr_ipv6_gateway_addr;
+        };
+    };
+    size_t vpncr_prefix;
+    short vpncr_metric;
+};
+
+struct ovpn_client_config {
+    struct in_addr vpncc_ipv4_addr;
+    struct in_addr vpncc_ipv4_remote_addr;
+    bool vpncc_has_ipv6_addr;
+    struct in6_addr vpncc_ipv6_addr;
+    size_t vpncc_ipv6_prefix;
+    struct in6_addr vpncc_ipv6_remote_addr;
+    vector_t *vpncc_networks;
+    vector_t *vpncc_routes;
+};
+
 int
 ovpn_client_config_alloc(ovpn_client_config_t **vpnccp, const char *ipv4_addr, 
                         const char *ipv4_remote_addr)
@@ -38,13 +74,13 @@ ovpn_client_config_alloc(ovpn_client_config_t **vpnccp, const char *ipv4_addr,
     (*vpnccp)->vpncc_has_ipv6_addr = false;
 
     if ((err = vector_alloc(&((*vpnccp)->vpncc_networks), 
-         sizeof(ovpn_client_network_t))) != 0) {
+         sizeof(struct ovpn_client_network))) != 0) {
         free(*vpnccp);
         return (err);
     }
 
     if ((err = vector_alloc(&((*vpnccp)->vpncc_routes), 
-         sizeof(ovpn_client_route_t))) != 0) {
+         sizeof(struct ovpn_client_route))) != 0) {
         /* Important! Free previously allocated vector for networks */
         vector_free((*vpnccp)->vpncc_networks); 
         free(*vpnccp);
@@ -133,7 +169,7 @@ i_fprintf_vpncc_ifconfig_ipv6_push(FILE *stream,
 }
 
 static int
-i_fprintf_vpncc_ipv4_iroute(FILE *stream, const ovpn_client_network_t *network) 
+i_fprintf_vpncc_ipv4_iroute(FILE *stream, const struct ovpn_client_network *network) 
 {
     char addr_str[INET_ADDRSTRLEN] = {0};
     struct in_addr netmask = {0};
@@ -173,7 +209,7 @@ i_fprintf_vpncc_ipv4_iroute(FILE *stream, const ovpn_client_network_t *network)
 }
 
 static int
-i_fprintf_vpncc_ipv6_iroute(FILE *stream, const ovpn_client_network_t *network) 
+i_fprintf_vpncc_ipv6_iroute(FILE *stream, const struct ovpn_client_network *network) 
 {
     char ipv6_addr_str[INET6_ADDRSTRLEN] = {0};
     int err = 0;
@@ -199,7 +235,7 @@ i_fprintf_vpncc_ipv6_iroute(FILE *stream, const ovpn_client_network_t *network)
 }
 
 static int
-i_fprintf_vpncc_iroute(FILE *stream, const ovpn_client_network_t *network)
+i_fprintf_vpncc_iroute(FILE *stream, const struct ovpn_client_network *network)
 {
     int err = 0;
 
@@ -222,7 +258,7 @@ i_fprintf_vpncc_iroute(FILE *stream, const ovpn_client_network_t *network)
 static int
 i_fprintf_vpncc_iroutes(FILE *stream, const ovpn_client_config_t *vpncc)
 {
-    ovpn_client_network_t *elem;
+    struct ovpn_client_network *elem;
     int err = 0;
 
     assert(stream != NULL);
@@ -247,7 +283,8 @@ i_fprintf_vpncc_iroutes(FILE *stream, const ovpn_client_config_t *vpncc)
 }
 
 static int
-i_fprintf_vpncc_push_ipv4_route(FILE *stream, const ovpn_client_route_t *route)
+i_fprintf_vpncc_push_ipv4_route(FILE *stream, 
+                                const struct ovpn_client_route *route)
 {
     char addr_str[INET_ADDRSTRLEN] = {0};
     struct in_addr netmask = {0};
@@ -302,7 +339,8 @@ i_fprintf_vpncc_push_ipv4_route(FILE *stream, const ovpn_client_route_t *route)
 }
 
 static int
-i_fprintf_vpncc_push_ipv6_route(FILE *stream, const ovpn_client_route_t *route)
+i_fprintf_vpncc_push_ipv6_route(FILE *stream, 
+                                const struct ovpn_client_route *route)
 {
     char addr_str[INET6_ADDRSTRLEN] = {0};
     int err = 0;
@@ -340,7 +378,8 @@ i_fprintf_vpncc_push_ipv6_route(FILE *stream, const ovpn_client_route_t *route)
 }
 
 static int
-i_fprintf_vpncc_push_route(FILE *stream, const ovpn_client_route_t *route)
+i_fprintf_vpncc_push_route(FILE *stream, 
+                           const struct ovpn_client_route *route)
 {
     int err = 0;
 
@@ -363,7 +402,7 @@ i_fprintf_vpncc_push_route(FILE *stream, const ovpn_client_route_t *route)
 static int
 i_fprintf_vpncc_push_routes(FILE *stream, const ovpn_client_config_t *vpncc)
 {
-    ovpn_client_route_t *elem = NULL;
+    struct ovpn_client_route *elem = NULL;
     int err = 0;
 
     assert(stream != NULL);
@@ -465,9 +504,10 @@ ovpn_client_config_set_ipv6_addr(ovpn_client_config_t *vpncc,
 }
 
 int
-ovpn_client_config_add_ipv4_network(ovpn_client_config_t *vpncc, const char *str)
+ovpn_client_config_add_ipv4_network(ovpn_client_config_t *vpncc, 
+                                    const char *str)
 {
-    ovpn_client_network_t entry = {0};
+    struct ovpn_client_network entry = {0};
     int err = 0;
 
     if (vpncc == NULL || str == NULL) {
@@ -488,9 +528,10 @@ ovpn_client_config_add_ipv4_network(ovpn_client_config_t *vpncc, const char *str
 }
 
 int
-ovpn_client_config_add_ipv6_network(ovpn_client_config_t *vpncc, const char *str)
+ovpn_client_config_add_ipv6_network(ovpn_client_config_t *vpncc, 
+                                    const char *str)
 {
-    ovpn_client_network_t entry = {0};
+    struct ovpn_client_network entry = {0};
     int err = 0;
 
     if (vpncc == NULL || str == NULL) {
@@ -544,7 +585,7 @@ int
 ovpn_client_config_add_ipv4_route(ovpn_client_config_t *vpncc, const char *str, 
                                  const char *gateway_str, short metric)
 {
-    ovpn_client_route_t entry = {0};
+    struct ovpn_client_route entry = {0};
     int err = 0;
 
     if (vpncc == NULL || str == NULL) {
@@ -584,7 +625,7 @@ int
 ovpn_client_config_add_ipv6_route(ovpn_client_config_t *vpncc, const char *str, 
                                  const char *gateway_str, short metric)
 {
-    ovpn_client_route_t entry = {0};
+    struct ovpn_client_route entry = {0};
     int err = 0;
 
     if (vpncc == NULL || str == NULL) {
@@ -651,10 +692,12 @@ ovpn_client_config_add_route(ovpn_client_config_t *vpncc, const char *str,
     /* Add new route based on family. */
     switch (af) {
     case AF_INET:
-        err = ovpn_client_config_add_ipv4_route(vpncc, str, gateway_str, metric);
+        err = ovpn_client_config_add_ipv4_route(vpncc, str, gateway_str, 
+            metric);
         break;
     case AF_INET6:
-        err = ovpn_client_config_add_ipv6_route(vpncc, str, gateway_str, metric);
+        err = ovpn_client_config_add_ipv6_route(vpncc, str, gateway_str, 
+            metric);
         break;
     default:
         err = ENOTSUP;

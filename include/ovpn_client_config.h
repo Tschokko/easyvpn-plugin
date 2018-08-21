@@ -16,41 +16,7 @@
 extern "C" {
 #endif
 
-typedef struct ovpn_client_network_s {
-    address_family_t vpncn_family;
-    union {
-        struct in_addr vpncn_ipv4_addr;
-        struct in6_addr vpncn_ipv6_addr;
-    };
-    size_t vpncn_prefix;
-} ovpn_client_network_t;
-
-typedef struct ovpn_client_route_s {
-    address_family_t vpncr_family;
-    union {
-        struct {
-            struct in_addr vpncr_ipv4_addr;
-            struct in_addr vpncr_ipv4_gateway_addr;
-        };
-        struct {
-            struct in6_addr vpncr_ipv6_addr;
-            struct in6_addr vpncr_ipv6_gateway_addr;
-        };
-    };
-    size_t vpncr_prefix;
-    short vpncr_metric;
-} ovpn_client_route_t;
-
-typedef struct ovpn_client_config_s {
-    struct in_addr vpncc_ipv4_addr;
-    struct in_addr vpncc_ipv4_remote_addr;
-    bool vpncc_has_ipv6_addr;
-    struct in6_addr vpncc_ipv6_addr;
-    size_t vpncc_ipv6_prefix;
-    struct in6_addr vpncc_ipv6_remote_addr;
-    vector_t *vpncc_networks;
-    vector_t *vpncc_routes;
-} ovpn_client_config_t;
+typedef struct ovpn_client_config ovpn_client_config_t;
 
 int ovpn_client_config_alloc(ovpn_client_config_t **, const char *, const char *);
 void ovpn_client_config_free(ovpn_client_config_t *);
